@@ -58,6 +58,10 @@ class Manager():
         self.conn.commit()
         results = self.cursor.fetchone()
 
+        if results == None:
+            await self.bot.send_message("The product has not been found, please use the following command to view all current orders. `!orderlist`")
+            return
+
         msg = error + "You created too many products, but it will still be marked as completed."
         if (results[1] - amount) == 0:
             msg = "Order fulfilled. It has been removed, thank you!"
