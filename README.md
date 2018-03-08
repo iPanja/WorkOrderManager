@@ -18,6 +18,11 @@ Replace `key="<TOKEN>"` with your Discord bot token (Obtained from the [Discord 
 
 Run the `main.py` file. Thats it! Your bot should now be fully functional!
 
+# Usage
+* `!order <item> <amount>` - Creates a new order. (Amount will be set to 1 if not provided)
+* `!orderfinish <item> <amount>` - Updates an existing order, subtracting the old amount by the provided one. (Amount will be set to 1 if not provided)
+* `!orderlist` - Direct messages the list of all current orders
+
 # MySQL Errors
 If you are receiving MySQL related errors you may have to change some of the options on `line 8` of `Manager.py`. In the future these options will be put in the config file.
 
