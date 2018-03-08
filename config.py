@@ -1,3 +1,3 @@
 discord = dict(
-    key = ""
+    key = "<TOKEN>"
 )
