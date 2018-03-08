@@ -59,22 +59,22 @@ class Manager():
         results = self.cursor.fetchone()
 
         if results == None:
-            await self.bot.send_message("The product has not been found, please use the following command to view all current orders. `!orderlist`")
+            await self.bot.send_message(ctx.message.channel, "The product has not been found, please use the following command to view all current orders. `!orderlist`")
             return
 
-        msg = error + "You created too many products, but it will still be marked as completed."
+        msg = "You created too many products, but it will still be marked as completed."
         if (results[1] - amount) == 0:
             msg = "Order fulfilled. It has been removed, thank you!"
         if (results[1] - amount) <= 0:
-            self.cursor.execute("""DELETE FROM orders WHERE item = %s AND amount = %s""", (item, amount,))
+            self.cursor.execute("""DELETE FROM orders WHERE item = %s AND amount = %s""", (item, results[1],))
             self.conn.commit()
-            await self.bot.send_message(ctx.message.channel, msg)
+            await self.bot.send_message(ctx.message.channel, error + msg)
             return
 
         amount = results[1] - amount
         self.cursor.execute("""UPDATE orders SET amount = %s WHERE item = %s""", (amount, item,))
         self.conn.commit()
-        await self.bot.send_message(ctx.message.channel, msg + "Your contributions have been accounted for, thank you! Only " + str(amount) + "x more " + item + "s are needed!")
+        await self.bot.send_message(ctx.message.channel, error + "Your contributions have been accounted for, thank you! Only " + str(amount) + "x more " + item + "s are needed!")
 
     @commands.command(pass_context = True)
     async def orderlist(self, ctx):
