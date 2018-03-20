@@ -13,6 +13,28 @@ class Manager():
             return True
         except ValueError:
             return False
+    def fetch(self, item):
+        if item == "*":
+            self.cursor.execute("""SELECT item, amount FROM orders""")
+        else:
+            self.cursor.execute("""SELECT item, amount FROM orders WHERE item = %s""", (item,))
+        self.conn.commit()
+        return self.cursor.fetchall()
+    def fetchone(self, item):
+        result = self.fetch(item)
+        if len(result) == 0:
+            return None
+        return result[0]
+    def update(self, item, amount):
+        self.cursor.execute("""UPDATE orders SET amount = %s WHERE item = %s""", (amount, item,))
+        self.conn.commit()
+    def insert(self, item, amount, author):
+        self.cursor.execute("""INSERT INTO orders (item, amount, creator) VALUES (%s, %s, %s)""", (item, amount, author))
+        self.conn.commit()
+    def delete(self, item, amount):
+        self.cursor.execute("""DELETE FROM orders WHERE item = %s AND amount = %s""", (item, amount,))
+        self.conn.commit()
+
     @commands.command(pass_context = True)
     async def order(self, ctx):
         args = (ctx.message.content).split()[1:]
@@ -24,19 +46,13 @@ class Manager():
             amount = 1
         else:
             amount = int(amount)
-
-        self.cursor.execute("""SELECT item, amount FROM orders WHERE item = %s""", (item,))
-        self.conn.commit()
-        rows = self.cursor.fetchall()
+        rows = self.fetch(item)
         if len(rows) != 0:
             amount += rows[0][1]
-            self.cursor.execute("""UPDATE orders SET amount = %s WHERE item = %s""", (amount, item,))
-            self.conn.commit()
+            self.update(item, amount)
             await self.bot.send_message(ctx.message.channel, "An order with that name already exists, it has been updated to " + str(amount) + "x (was " + str(rows[0][1]) + ")")
             return
-
-        self.cursor.execute("""INSERT INTO orders (item, amount, creator) VALUES (%s, %s, %s)""", (item, amount, ctx.message.author.name))
-        self.conn.commit()
+        self.insert(item, amount, ctx.message.author.name)
 
         await self.bot.send_message(ctx.message.channel, "The order has been processed, thank you!")
 
@@ -54,9 +70,7 @@ class Manager():
             amount = 1
         else:
             amount = int(amount)
-        self.cursor.execute("""SELECT item, amount FROM orders WHERE item = %s""", (item,))
-        self.conn.commit()
-        results = self.cursor.fetchone()
+        results = self.fetchone(item)
 
         if results == None:
             await self.bot.send_message(ctx.message.channel, "The product has not been found, please use the following command to view all current orders. `!orderlist`")
@@ -66,23 +80,18 @@ class Manager():
         if (results[1] - amount) == 0:
             msg = "Order fulfilled. It has been removed, thank you!"
         if (results[1] - amount) <= 0:
-            self.cursor.execute("""DELETE FROM orders WHERE item = %s AND amount = %s""", (item, results[1],))
-            self.conn.commit()
+            self.delete(item, results[1])
             await self.bot.send_message(ctx.message.channel, error + msg)
             return
 
         amount = results[1] - amount
-        self.cursor.execute("""UPDATE orders SET amount = %s WHERE item = %s""", (amount, item,))
-        self.conn.commit()
+        self.update(item, amount)
         await self.bot.send_message(ctx.message.channel, error + "Your contributions have been accounted for, thank you! Only " + str(amount) + "x more " + item + "s are needed!")
 
     @commands.command(pass_context = True)
     async def orderlist(self, ctx):
         msg = "Order List:\n"
-
-        self.cursor.execute("""SELECT item, amount FROM orders""")
-        self.conn.commit()
-        rows = self.cursor.fetchall()
+        rows = self.fetch('*')
 
         if len(rows) == 0:
             await self.bot.send_message(ctx.message.author, "The order list is currently empty.")
