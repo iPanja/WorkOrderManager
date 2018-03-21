@@ -10,7 +10,7 @@ Created by iPanja#0959. Please open an issue or contact me if you have any probl
 Install some type of application to setup a MySQL server.
 
 * WAMP is a free Windows option
-* MAMO is a free OS X option
+* MAMP is a free OS X option
 
 Execute/import the `database.sql` file to automatically setup the database
 
